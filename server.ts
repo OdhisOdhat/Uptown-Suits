@@ -1,6 +1,5 @@
 import express from "express";
 import path from "path";
-import { createServer as createViteServer } from "vite";
 import { GoogleGenAI, Type } from "@google/genai";
 import dotenv from "dotenv";
 import pkg from "pg";
@@ -19,24 +18,27 @@ const pool = new Pool({
 });
 
 let dbAvailable = false;
-let dbInitialized = false;
+let dbInitPromise: Promise<void> | null = null;
 
-async function ensureDb() {
-  if (dbInitialized) return;
-  if (process.env.DATABASE_URL) {
-    try {
-      const client = await pool.connect();
-      dbAvailable = true;
-      client.release();
-      await initDB();
-    } catch (err) {
-      console.warn("Could not connect to Neon DB. Operating in memory mode:", err);
+function ensureDb(): Promise<void> {
+  if (dbInitPromise) return dbInitPromise;
+
+  dbInitPromise = (async () => {
+    if (process.env.DATABASE_URL) {
+      try {
+        await pool.query("SELECT 1");
+        dbAvailable = true;
+        await initDB();
+      } catch (err) {
+        console.warn("Could not connect to Neon DB. Operating in memory mode:", err);
+        dbAvailable = false;
+      }
+    } else {
       dbAvailable = false;
     }
-  } else {
-    dbAvailable = false;
-  }
-  dbInitialized = true;
+  })();
+
+  return dbInitPromise;
 }
 
 app.use(async (req, res, next) => {
@@ -334,10 +336,8 @@ let memMeasurements: Record<string, any> = {
 async function initDB() {
   if (!process.env.DATABASE_URL) return;
   try {
-    const client = await pool.connect();
-    
     // Create Users table
-    await client.query(`
+    await pool.query(`
       CREATE TABLE IF NOT EXISTS users (
         id VARCHAR(50) PRIMARY KEY,
         name VARCHAR(100) NOT NULL,
@@ -349,7 +349,7 @@ async function initDB() {
     `);
 
     // Create Products table
-    await client.query(`
+    await pool.query(`
       CREATE TABLE IF NOT EXISTS products (
         id VARCHAR(50) PRIMARY KEY,
         category VARCHAR(50) NOT NULL,
@@ -365,7 +365,7 @@ async function initDB() {
     `);
 
     // Create Orders table
-    await client.query(`
+    await pool.query(`
       CREATE TABLE IF NOT EXISTS orders (
         id VARCHAR(50) PRIMARY KEY,
         customer_name VARCHAR(100),
@@ -385,7 +385,7 @@ async function initDB() {
     `);
 
     // Create Repairs table
-    await client.query(`
+    await pool.query(`
       CREATE TABLE IF NOT EXISTS repairs (
         id VARCHAR(50) PRIMARY KEY,
         customer_name VARCHAR(100),
@@ -404,7 +404,7 @@ async function initDB() {
     `);
 
     // Create Wardrobe table
-    await client.query(`
+    await pool.query(`
       CREATE TABLE IF NOT EXISTS wardrobe (
         id VARCHAR(50) PRIMARY KEY,
         type VARCHAR(20),
@@ -420,7 +420,7 @@ async function initDB() {
     `);
 
     // Create Measurements table
-    await client.query(`
+    await pool.query(`
       CREATE TABLE IF NOT EXISTS measurements (
         user_id VARCHAR(50) PRIMARY KEY,
         chest DECIMAL(5, 2),
@@ -433,7 +433,7 @@ async function initDB() {
     `);
 
     // Create Gallery table
-    await client.query(`
+    await pool.query(`
       CREATE TABLE IF NOT EXISTS gallery (
         id VARCHAR(50) PRIMARY KEY,
         type VARCHAR(20) NOT NULL,
@@ -446,11 +446,11 @@ async function initDB() {
     `);
 
     // Seed products table if empty
-    const prodCheck = await client.query("SELECT COUNT(*) FROM products");
+    const prodCheck = await pool.query("SELECT COUNT(*) FROM products");
     if (parseInt(prodCheck.rows[0].count) === 0) {
       console.log("Seeding products into Neon DB...");
       for (const p of memProducts) {
-        await client.query(
+        await pool.query(
           `INSERT INTO products (id, category, name, price, description, image, stock, rating, size_guide, fabric_info)
            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
           [p.id, p.category, p.name, p.price, p.description, p.image, p.stock, p.rating, JSON.stringify(p.sizeGuide), p.fabricInfo]
@@ -459,11 +459,11 @@ async function initDB() {
     }
 
     // Seed gallery table if empty
-    const galCheck = await client.query("SELECT COUNT(*) FROM gallery");
+    const galCheck = await pool.query("SELECT COUNT(*) FROM gallery");
     if (parseInt(galCheck.rows[0].count) === 0) {
       console.log("Seeding gallery into Neon DB...");
       for (const g of memGallery) {
-        await client.query(
+        await pool.query(
           `INSERT INTO gallery (id, type, title, description, image, client_name)
            VALUES ($1, $2, $3, $4, $5, $6)`,
           [g.id, g.type, g.title, g.description, g.image, g.clientName || null]
@@ -471,7 +471,6 @@ async function initDB() {
       }
     }
 
-    client.release();
     console.log("Neon DB Schema Initialized Successfully!");
   } catch (err) {
     console.warn("DB table initialization failed, operating in memory backup:", err);
@@ -1571,9 +1570,8 @@ app.put("/api/measurements", async (req, res) => {
 async function startServer() {
   if (process.env.DATABASE_URL) {
     try {
-      const client = await pool.connect();
+      await pool.query("SELECT 1");
       dbAvailable = true;
-      client.release();
       console.log("Database available on startup. Running initDB...");
       await initDB();
     } catch (err) {
@@ -1587,6 +1585,7 @@ async function startServer() {
 
   if (process.env.NODE_ENV !== "production") {
     console.log("Starting server in development mode with Vite middleware...");
+    const { createServer: createViteServer } = await import("vite");
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: "spa",
