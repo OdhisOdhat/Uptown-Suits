@@ -1,0 +1,31 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=JetBrains+Mono:wght@400;500&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Montserrat", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Playfair Display", Georgia, serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+
+  /* Luxury / Prestige Color Palettes */
+  --color-atelier-bg: #F5F2ED;
+  --color-atelier-text: #1A1A1A;
+  --color-atelier-accent: #C5A059; /* Prestige Antique Gold */
+  --color-atelier-accent-hover: #B08E4E;
+  --color-atelier-card: #EFEBE5; /* Warmer luxury container background */
+  --color-atelier-border: rgba(26, 26, 26, 0.15); /* Delicate contrast border */
+}
+
+body {
+  background-color: var(--color-atelier-bg);
+  color: var(--color-atelier-text);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4, .font-serif {
+  font-family: var(--font-serif);
+}
+
+.font-mono {
+  font-family: var(--font-mono);
+}
