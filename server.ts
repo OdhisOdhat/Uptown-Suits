@@ -44,6 +44,16 @@ app.use(async (req, res, next) => {
   next();
 });
 
+function safeJsonParse(val: any, fallback: any = undefined) {
+  if (!val) return fallback;
+  try {
+    return JSON.parse(val);
+  } catch (e) {
+    console.warn("safeJsonParse failed to parse:", val, e);
+    return fallback;
+  }
+}
+
 // Robust fallback in-memory data tables
 let memUsers = [
   { id: "usr-admin", name: "Master Tailor Admin", email: "tailor@uptown.com", password: "admin", role: "admin" },
@@ -1029,7 +1039,7 @@ app.get("/api/products", async (req, res) => {
         image: row.image,
         stock: row.stock,
         rating: parseFloat(row.rating),
-        sizeGuide: row.size_guide ? JSON.parse(row.size_guide) : [],
+        sizeGuide: safeJsonParse(row.size_guide, []),
         fabricInfo: row.fabric_info
       }));
       return res.json(mapped);
@@ -1259,8 +1269,8 @@ app.get("/api/orders", async (req, res) => {
         productName: row.product_name,
         productImage: row.product_image,
         productCategory: row.product_category,
-        customDetails: row.custom_details ? JSON.parse(row.custom_details) : undefined,
-        measurements: row.measurements ? JSON.parse(row.measurements) : undefined
+        customDetails: safeJsonParse(row.custom_details),
+        measurements: safeJsonParse(row.measurements)
       }));
       return res.json(mapped);
     } catch (err) {
