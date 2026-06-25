@@ -8,7 +8,7 @@ import pkg from "pg";
 const { Pool } = pkg;
 dotenv.config();
 
-const app = express();
+export const app = express();
 const PORT = 3000;
 
 // Connect to Neon PostgreSQL database
@@ -19,6 +19,30 @@ const pool = new Pool({
 });
 
 let dbAvailable = false;
+let dbInitialized = false;
+
+async function ensureDb() {
+  if (dbInitialized) return;
+  if (process.env.DATABASE_URL) {
+    try {
+      const client = await pool.connect();
+      dbAvailable = true;
+      client.release();
+      await initDB();
+    } catch (err) {
+      console.warn("Could not connect to Neon DB. Operating in memory mode:", err);
+      dbAvailable = false;
+    }
+  } else {
+    dbAvailable = false;
+  }
+  dbInitialized = true;
+}
+
+app.use(async (req, res, next) => {
+  await ensureDb();
+  next();
+});
 
 // Robust fallback in-memory data tables
 let memUsers = [
@@ -1572,4 +1596,6 @@ async function startServer() {
   });
 }
 
-startServer();
+if (!process.env.VERCEL) {
+  startServer();
+}
