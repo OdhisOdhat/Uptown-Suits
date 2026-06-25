@@ -10,6 +10,7 @@ import WardrobeView from "./components/WardrobeView";
 import TailorDashboardView from "./components/TailorDashboardView";
 import OrderTrackerView from "./components/OrderTrackerView";
 import AuthView from "./components/AuthView";
+import GalleryView from "./components/GalleryView";
 import Footer from "./components/Footer";
 
 import {
@@ -381,6 +382,10 @@ export default function App() {
 
           {activeView === "repairs" && (
             <RepairsView onSubmitRepair={handlePlaceRepairRequest} />
+          )}
+
+          {activeView === "gallery" && (
+            <GalleryView user={user} />
           )}
 
           {activeView === "wardrobe" && (

@@ -25,12 +25,14 @@ export default function Navbar({
         { id: "tailor-dashboard", label: "Workspace CRM" },
         { id: "shop", label: "Products Catalog" },
         { id: "custom-studio", label: "Bespoke Configurator" },
+        { id: "gallery", label: "Bespoke Gallery" },
       ]
     : [
         { id: "shop", label: "Shop Boutique" },
         { id: "style-finder", label: "AI Style Finder" },
         { id: "custom-studio", label: "Custom Order" },
         { id: "repairs", label: "Repairs & Care" },
+        { id: "gallery", label: "Bespoke Gallery" },
         { id: "wardrobe", label: "Customer Closet" },
       ];
 

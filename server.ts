@@ -173,6 +173,57 @@ let memProducts = [
   }
 ];
 
+let memGallery = [
+  {
+    id: "gal-1",
+    type: "suit",
+    title: "The Mayfair Midnight Tuxedo",
+    description: "A gorgeous modern custom 3-piece tuxedo design featuring peak lapels in black grosgrain silk, constructed from premium Super 120s Italian wool.",
+    image: "https://images.unsplash.com/photo-1593032465175-481ac7f401a0?auto=format&fit=crop&q=80&w=600",
+    clientName: ""
+  },
+  {
+    id: "gal-2",
+    type: "suit",
+    title: "The Kensington Prince of Wales",
+    description: "A sharp double-breasted suit crafted from English flannel wool in an elegant grey glen plaid.",
+    image: "https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&q=80&w=600",
+    clientName: ""
+  },
+  {
+    id: "gal-3",
+    type: "suit",
+    title: "The Amalfi Summer Sand",
+    description: "Lightweight, unlined Neapolitan-style suit in pure Italian linen. Perfect for warm-weather destination weddings.",
+    image: "https://images.unsplash.com/photo-1617137968427-85924c800a22?auto=format&fit=crop&q=80&w=600",
+    clientName: ""
+  },
+  {
+    id: "gal-4",
+    type: "client",
+    title: "Marcus Henderson on His Big Day",
+    description: "Marcus looks absolutely stunning on his wedding day wearing our hand-tailored Midnight Blue Wool Suit. 'The fit was so precise, I felt incredible! Highly recommended.'",
+    image: "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&q=80&w=600",
+    clientName: "Marcus Henderson"
+  },
+  {
+    id: "gal-5",
+    type: "client",
+    title: "Sarah's Gala Debut",
+    description: "Sarah commanding the room at the annual charity gala in her custom-tailored Victoria Tuxedo Gown. 'The satin lapel accents are beautifully detailed!'",
+    image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=600",
+    clientName: "Sarah Jenkins"
+  },
+  {
+    id: "gal-6",
+    type: "client",
+    title: "David & Charles - Groom & Best Man",
+    description: "A perfectly matched groom party. Both wearing our bespoke peak lapel double-breasted blazers. 'Uptown Suits made the fitting process seamless for my entire party.'",
+    image: "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&q=80&w=600",
+    clientName: "David & Charles"
+  }
+];
+
 let memOrders = [
   {
     id: "A-2841",
@@ -347,6 +398,19 @@ async function initDB() {
       );
     `);
 
+    // Create Gallery table
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS gallery (
+        id VARCHAR(50) PRIMARY KEY,
+        type VARCHAR(20) NOT NULL,
+        title VARCHAR(100) NOT NULL,
+        description TEXT,
+        image TEXT NOT NULL,
+        client_name VARCHAR(100),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
     // Seed products table if empty
     const prodCheck = await client.query("SELECT COUNT(*) FROM products");
     if (parseInt(prodCheck.rows[0].count) === 0) {
@@ -356,6 +420,19 @@ async function initDB() {
           `INSERT INTO products (id, category, name, price, description, image, stock, rating, size_guide, fabric_info)
            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
           [p.id, p.category, p.name, p.price, p.description, p.image, p.stock, p.rating, JSON.stringify(p.sizeGuide), p.fabricInfo]
+        );
+      }
+    }
+
+    // Seed gallery table if empty
+    const galCheck = await client.query("SELECT COUNT(*) FROM gallery");
+    if (parseInt(galCheck.rows[0].count) === 0) {
+      console.log("Seeding gallery into Neon DB...");
+      for (const g of memGallery) {
+        await client.query(
+          `INSERT INTO gallery (id, type, title, description, image, client_name)
+           VALUES ($1, $2, $3, $4, $5, $6)`,
+          [g.id, g.type, g.title, g.description, g.image, g.clientName || null]
         );
       }
     }
@@ -1021,6 +1098,109 @@ app.delete("/api/products/:id", async (req, res) => {
   }
 
   memProducts = memProducts.filter((p) => p.id !== id);
+  res.json({ success: true });
+});
+
+
+// --- LOOKBOOK & GALLERY ENDPOINTS ---
+
+app.get("/api/gallery", async (req, res) => {
+  if (dbAvailable) {
+    try {
+      const galRes = await pool.query("SELECT * FROM gallery ORDER BY id DESC");
+      const mapped = galRes.rows.map((row) => ({
+        id: row.id,
+        type: row.type,
+        title: row.title,
+        description: row.description,
+        image: row.image,
+        clientName: row.client_name || ""
+      }));
+      return res.json(mapped);
+    } catch (err) {
+      console.warn("Get gallery SQL failed, using memory:", err);
+    }
+  }
+  res.json(memGallery);
+});
+
+app.post("/api/gallery", async (req, res) => {
+  const { type, title, description, image, clientName } = req.body;
+  if (!title || !type || !image) {
+    return res.status(400).json({ error: "Type, Title, and Image are required." });
+  }
+
+  const newId = `gal-${Date.now()}`;
+
+  if (dbAvailable) {
+    try {
+      await pool.query(
+        `INSERT INTO gallery (id, type, title, description, image, client_name)
+         VALUES ($1, $2, $3, $4, $5, $6)`,
+        [newId, type, title, description || "", image, clientName || null]
+      );
+      return res.json({ success: true, id: newId });
+    } catch (err) {
+      console.warn("Post gallery SQL failed, using memory:", err);
+    }
+  }
+
+  const newItem = {
+    id: newId,
+    type,
+    title,
+    description: description || "",
+    image,
+    clientName: clientName || ""
+  };
+  memGallery.unshift(newItem);
+  res.json({ success: true, item: newItem });
+});
+
+app.put("/api/gallery/:id", async (req, res) => {
+  const { id } = req.params;
+  const { type, title, description, image, clientName } = req.body;
+
+  if (dbAvailable) {
+    try {
+      await pool.query(
+        `UPDATE gallery SET type = $1, title = $2, description = $3, image = $4, client_name = $5 WHERE id = $6`,
+        [type, title, description, image, clientName || null, id]
+      );
+      return res.json({ success: true });
+    } catch (err) {
+      console.warn("Update gallery SQL failed, using memory:", err);
+    }
+  }
+
+  const idx = memGallery.findIndex((g) => g.id === id);
+  if (idx !== -1) {
+    memGallery[idx] = {
+      ...memGallery[idx],
+      type,
+      title,
+      description,
+      image,
+      clientName: clientName || ""
+    };
+    return res.json({ success: true, item: memGallery[idx] });
+  }
+  res.status(404).json({ error: "Gallery item not found" });
+});
+
+app.delete("/api/gallery/:id", async (req, res) => {
+  const { id } = req.params;
+
+  if (dbAvailable) {
+    try {
+      await pool.query("DELETE FROM gallery WHERE id = $1", [id]);
+      return res.json({ success: true });
+    } catch (err) {
+      console.warn("Delete gallery SQL failed, using memory:", err);
+    }
+  }
+
+  memGallery = memGallery.filter((g) => g.id !== id);
   res.json({ success: true });
 });
 

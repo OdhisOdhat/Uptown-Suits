@@ -96,3 +96,14 @@ export interface WardrobeItem {
   dateAdded: string;
   status?: string;
 }
+
+export interface GalleryItem {
+  id: string;
+  type: "suit" | "client";
+  title: string;
+  description: string;
+  image: string;
+  clientName?: string;
+  createdAt?: string;
+}
+
