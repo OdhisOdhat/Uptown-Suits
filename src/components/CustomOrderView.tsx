@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Sparkles, ArrowRight, Loader2, Info, Coins, ShieldCheck, CheckCircle2, MessageSquare } from "lucide-react";
 import { FABRICS, COLORS, PATTERNS, COLLARS_LAPELS, CUFFS, POCKETS, INITIAL_MEASUREMENTS } from "../data";
 import { CustomDesignSpec, Measurement } from "../types";
+import { useCurrency } from "../context/CurrencyContext";
 
 interface CustomOrderViewProps {
   initialDesign?: Partial<CustomDesignSpec>;
@@ -10,6 +11,7 @@ interface CustomOrderViewProps {
 }
 
 export default function CustomOrderView({ initialDesign, initialMeasurements, onSubmitOrder }: CustomOrderViewProps) {
+  const { formatPrice } = useCurrency();
   // Configurator States
   const [category, setCategory] = useState<any>(initialDesign?.category || "suit");
   const [selectedFabric, setSelectedFabric] = useState(initialDesign?.fabric || FABRICS[0].name);
@@ -206,7 +208,7 @@ export default function CustomOrderView({ initialDesign, initialMeasurements, on
             </div>
             <div className="flex justify-between py-2 text-xs font-mono">
               <span className="text-stone-400 uppercase">TOTAL PRICE</span>
-              <span className="font-bold text-stone-800">${totalPrice}</span>
+              <span className="font-bold text-stone-800">{formatPrice(totalPrice)}</span>
             </div>
           </div>
           <button
@@ -1032,7 +1034,7 @@ export default function CustomOrderView({ initialDesign, initialMeasurements, on
                     }`}
                   >
                     <span className="font-bold text-stone-800">50% Deposit</span>
-                    <span className="text-[10px] text-stone-500 mt-1">${(totalPrice / 2).toFixed(0)} now</span>
+                    <span className="text-[10px] text-stone-500 mt-1">{formatPrice(totalPrice / 2)} now</span>
                   </button>
 
                   <button
@@ -1043,7 +1045,7 @@ export default function CustomOrderView({ initialDesign, initialMeasurements, on
                     }`}
                   >
                     <span className="font-bold text-stone-800">Installments</span>
-                    <span className="text-[10px] text-stone-500 mt-1">3x ${(totalPrice / 3).toFixed(0)}</span>
+                    <span className="text-[10px] text-stone-500 mt-1">3x {formatPrice(totalPrice / 3)}</span>
                   </button>
 
                   <button
@@ -1054,7 +1056,7 @@ export default function CustomOrderView({ initialDesign, initialMeasurements, on
                     }`}
                   >
                     <span className="font-bold text-stone-800">Full Payment</span>
-                    <span className="text-[10px] text-atelier-accent font-bold mt-1">${totalPrice}</span>
+                    <span className="text-[10px] text-atelier-accent font-bold mt-1">{formatPrice(totalPrice)}</span>
                   </button>
                 </div>
               </div>
@@ -1069,7 +1071,7 @@ export default function CustomOrderView({ initialDesign, initialMeasurements, on
               <div className="pt-6 border-t border-atelier-border flex items-center justify-between">
                 <div>
                   <span className="block text-[10px] font-mono text-stone-400">TOTAL MASTER COMMISSION</span>
-                  <span className="font-serif text-3xl font-bold text-stone-800">${totalPrice}</span>
+                  <span className="font-serif text-3xl font-bold text-stone-800">{formatPrice(totalPrice)}</span>
                 </div>
                 <button
                   onClick={handlePlaceOrder}

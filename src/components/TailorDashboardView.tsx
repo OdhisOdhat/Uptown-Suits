@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { ClipboardList, Users, ArrowRight, CheckCircle2, RotateCw, AlertCircle, Wrench, Scissors, MessageSquare, Check, X, Star } from "lucide-react";
 import { Order, RepairRequest, OrderStatus, Review } from "../types";
+import { useCurrency } from "../context/CurrencyContext";
 
 interface TailorDashboardViewProps {
   orders: Order[];
@@ -17,7 +18,9 @@ export default function TailorDashboardView({
   onUpdateRepairStatus,
   onAssignTeam,
 }: TailorDashboardViewProps) {
+  const { formatPrice } = useCurrency();
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+
   const [activeDashboardTab, setActiveDashboardTab] = useState<"workspace" | "reviews">("workspace");
   const [reviews, setReviews] = useState<Review[]>([]);
   const [reviewsLoading, setReviewsLoading] = useState(false);
@@ -201,7 +204,7 @@ export default function TailorDashboardView({
                     <div className="flex flex-wrap gap-x-4 text-xs text-stone-500 font-mono">
                       <span>Client: {order.customerName}</span>
                       <span>Date: {order.date}</span>
-                      <span>Total: ${order.totalPrice}</span>
+                      <span>Total: {formatPrice(order.totalPrice)}</span>
                     </div>
                   </div>
 
@@ -253,7 +256,7 @@ export default function TailorDashboardView({
                     </div>
 
                     <div className="pt-3 border-t border-stone-100 flex items-center justify-between">
-                      <span className="font-mono text-xs text-atelier-accent">Est: ${rep.costEstimate}</span>
+                      <span className="font-mono text-xs text-atelier-accent">Est: {formatPrice(rep.costEstimate)}</span>
                       <button
                         onClick={() => handleCycleRepair(rep)}
                         disabled={rep.status === "Delivered"}

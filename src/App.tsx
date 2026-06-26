@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { motion } from "motion/react";
 import Navbar from "./components/Navbar";
 import HomeView from "./components/HomeView";
@@ -13,10 +13,12 @@ import AuthView from "./components/AuthView";
 import GalleryView from "./components/GalleryView";
 import ReviewsView from "./components/ReviewsView";
 import Footer from "./components/Footer";
+import CurrencyWidget from "./components/CurrencyWidget";
 
 import { useAppState } from "./hooks/useAppState";
 
 export default function App() {
+  const [isCurrencyOpen, setIsCurrencyOpen] = useState(false);
   const {
     activeView,
     setActiveView,
@@ -59,7 +61,11 @@ export default function App() {
         user={user}
         onLogout={handleLogout}
         onOpenAuth={() => setActiveView("auth")}
+        onOpenCurrency={() => setIsCurrencyOpen(true)}
       />
+
+      {/* Global Currency Conversion Drawer Overlay */}
+      <CurrencyWidget isOpen={isCurrencyOpen} onClose={() => setIsCurrencyOpen(false)} />
 
       {/* Main Multi-Screen Switch Board */}
       <main className="pb-20">

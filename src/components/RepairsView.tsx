@@ -1,12 +1,14 @@
 import React, { useState } from "react";
 import { Wrench, Upload, Loader2, ArrowRight, ShieldCheck, CheckCircle2, MessageSquare } from "lucide-react";
 import { RepairRequest } from "../types";
+import { useCurrency } from "../context/CurrencyContext";
 
 interface RepairsViewProps {
   onSubmitRepair: (repair: RepairRequest) => void;
 }
 
 export default function RepairsView({ onSubmitRepair }: RepairsViewProps) {
+  const { formatPrice } = useCurrency();
   // Input fields
   const [garmentType, setGarmentType] = useState("Suit Jacket");
   const [issueType, setIssueType] = useState("Torn seam");
@@ -117,7 +119,7 @@ export default function RepairsView({ onSubmitRepair }: RepairsViewProps) {
           <div className="bg-atelier-bg border border-stone-200 text-xs text-stone-600 p-4 divide-y divide-stone-200">
             <div className="flex justify-between py-1.5"><span className="text-stone-400 font-mono">GARMENT</span><span className="font-bold">{garmentType}</span></div>
             <div className="flex justify-between py-1.5"><span className="text-stone-400 font-mono">ISSUE</span><span className="font-bold text-red-600">{issueType}</span></div>
-            <div className="flex justify-between py-1.5"><span className="text-stone-400 font-mono">AI PRICE ESTIMATE</span><span className="font-bold text-atelier-accent">${aiResult?.costEstimate || 45}</span></div>
+            <div className="flex justify-between py-1.5"><span className="text-stone-400 font-mono">AI PRICE ESTIMATE</span><span className="font-bold text-atelier-accent">{formatPrice(aiResult?.costEstimate || 45)}</span></div>
             <div className="flex justify-between py-1.5"><span className="text-stone-400 font-mono">PICKUP TYPE</span><span className="font-bold uppercase text-[10px]">{pickupOption}</span></div>
           </div>
           <button
@@ -246,7 +248,7 @@ export default function RepairsView({ onSubmitRepair }: RepairsViewProps) {
                   <div className="grid grid-cols-3 gap-4 bg-stone-50 p-4 border border-stone-200 text-center">
                     <div>
                       <span className="block text-[9px] font-mono text-stone-400 uppercase">COST ESTIMATE</span>
-                      <span className="text-lg font-serif font-bold text-stone-800">${aiResult.costEstimate}</span>
+                      <span className="text-lg font-serif font-bold text-stone-800">{formatPrice(aiResult.costEstimate)}</span>
                     </div>
                     <div>
                       <span className="block text-[9px] font-mono text-stone-400 uppercase">DURATION</span>

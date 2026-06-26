@@ -1,5 +1,6 @@
 import React from "react";
-import { ShoppingBag, User, Sliders, MapPin, LogOut, LogIn, ShieldAlert } from "lucide-react";
+import { ShoppingBag, User, Sliders, MapPin, LogOut, LogIn, ShieldAlert, Globe } from "lucide-react";
+import { useCurrency } from "../context/CurrencyContext";
 
 interface NavbarProps {
   activeTab: string;
@@ -8,6 +9,7 @@ interface NavbarProps {
   user: { id: string; name: string; email: string; role: "customer" | "admin" } | null;
   onLogout: () => void;
   onOpenAuth: () => void;
+  onOpenCurrency: () => void;
 }
 
 export default function Navbar({
@@ -16,8 +18,10 @@ export default function Navbar({
   cartCount,
   user,
   onLogout,
-  onOpenAuth
+  onOpenAuth,
+  onOpenCurrency
 }: NavbarProps) {
+  const { currencyInfo } = useCurrency();
   
   // Custom navigation items based on user role
   const navItems = user?.role === "admin"
@@ -71,6 +75,18 @@ export default function Navbar({
 
         {/* Right Utilities */}
         <div className="flex items-center space-x-3">
+          {/* Currency Switcher Toggle */}
+          <button
+            onClick={onOpenCurrency}
+            title="Boutique Currency Atelier"
+            className="flex items-center space-x-1.5 px-2.5 py-1.5 rounded-lg text-stone-300 hover:text-white hover:bg-stone-800 transition-colors cursor-pointer border border-stone-800 bg-stone-900/40"
+          >
+            <Globe className="w-3.5 h-3.5 text-atelier-accent" />
+            <span className="text-[10px] font-mono font-bold tracking-wider leading-none">
+              {currencyInfo.flag} {currencyInfo.code}
+            </span>
+          </button>
+
           {/* Tracker Shortcut (Only for customers) */}
           {user?.role !== "admin" && (
             <button

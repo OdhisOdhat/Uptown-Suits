@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { ShoppingBag, Star, Info, Check, ShieldCheck, X, Plus, Trash2, Edit2, Search, SlidersHorizontal, Upload } from "lucide-react";
 import { Product } from "../types";
+import { useCurrency } from "../context/CurrencyContext";
 
 interface ShopViewProps {
   onPurchaseProduct: (product: Product, size: string) => void;
@@ -8,7 +9,9 @@ interface ShopViewProps {
 }
 
 export default function ShopView({ onPurchaseProduct, user }: ShopViewProps) {
+  const { formatPrice } = useCurrency();
   const [productsList, setProductsList] = useState<Product[]>([]);
+
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [activeProduct, setActiveProduct] = useState<Product | null>(null);
   const [selectedSize, setSelectedSize] = useState<string>("");
@@ -364,7 +367,7 @@ export default function ShopView({ onPurchaseProduct, user }: ShopViewProps) {
                 </div>
 
                 <div className="flex items-center justify-between pt-2.5 border-t border-stone-100">
-                  <span className="font-serif text-lg font-bold text-stone-900">${p.price}</span>
+                  <span className="font-serif text-lg font-bold text-stone-900">{formatPrice(p.price)}</span>
                   <div className="flex items-center space-x-1 text-amber-500">
                     <Star className="w-3.5 h-3.5 fill-current" />
                     <span className="font-mono text-xs text-stone-600 font-semibold">{p.rating}</span>
@@ -408,7 +411,7 @@ export default function ShopView({ onPurchaseProduct, user }: ShopViewProps) {
                   <div>
                     <span className="text-xs font-mono text-stone-400 uppercase tracking-widest font-bold">{activeProduct.category}</span>
                     <h2 className="font-serif text-2xl lg:text-3xl font-semibold mt-1 text-stone-900">{activeProduct.name}</h2>
-                    <span className="text-2xl font-serif font-bold text-stone-900 block mt-2">${activeProduct.price}</span>
+                    <span className="text-2xl font-serif font-bold text-stone-900 block mt-2">{formatPrice(activeProduct.price)}</span>
                   </div>
 
                   <p className="text-xs text-stone-600 leading-relaxed">{activeProduct.description}</p>
