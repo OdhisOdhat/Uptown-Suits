@@ -8,7 +8,30 @@ const { Pool } = pkg;
 dotenv.config();
 
 export const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT ? parseInt(process.env.PORT) : 3000;
+
+const logBuffer: string[] = [];
+const originalLog = console.log;
+const originalWarn = console.warn;
+const originalError = console.error;
+
+console.log = (...args) => {
+  logBuffer.push(`[LOG] ${args.map(a => typeof a === 'object' ? JSON.stringify(a) : String(a)).join(' ')}`);
+  if (logBuffer.length > 200) logBuffer.shift();
+  originalLog(...args);
+};
+
+console.warn = (...args) => {
+  logBuffer.push(`[WARN] ${args.map(a => typeof a === 'object' ? JSON.stringify(a) : String(a)).join(' ')}`);
+  if (logBuffer.length > 200) logBuffer.shift();
+  originalWarn(...args);
+};
+
+console.error = (...args) => {
+  logBuffer.push(`[ERROR] ${args.map(a => typeof a === 'object' ? JSON.stringify(a) : String(a)).join(' ')}`);
+  if (logBuffer.length > 200) logBuffer.shift();
+  originalError(...args);
+};
 
 // Connect to Neon PostgreSQL database
 const pool = new Pool({
@@ -1703,6 +1726,21 @@ app.put("/api/reviews/:id/status", async (req, res) => {
     return res.json({ success: true, review: memReviews[idx] });
   }
   res.status(404).json({ error: "Review not found" });
+});
+
+
+app.get("/api/debug-logs", (req, res) => {
+  res.json({ logs: logBuffer });
+});
+
+// Global error handler
+app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  console.error("Global Error Caught:", err);
+  res.status(500).json({
+    error: "Internal Server Error",
+    message: err.message,
+    stack: err.stack
+  });
 });
 
 
