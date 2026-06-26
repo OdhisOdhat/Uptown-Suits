@@ -33,6 +33,20 @@ export function useAppState() {
   // Load and synchronize user-specific records from database
   useEffect(() => {
     const syncData = async () => {
+      const handleResError = async (name: string, response: Response) => {
+        try {
+          const rawText = await response.text();
+          try {
+            const errJson = JSON.parse(rawText);
+            console.error(`Failed to load ${name} from API:`, response.status, errJson);
+          } catch {
+            console.error(`Failed to load ${name} from API:`, response.status, rawText.slice(0, 500));
+          }
+        } catch (readErr: any) {
+          console.error(`Failed to read response body for ${name}:`, readErr.message);
+        }
+      };
+
       try {
         // 1. Fetch Orders
         const ordersUrl = user?.role === "admin"
@@ -43,13 +57,7 @@ export function useAppState() {
           const ordersData = await ordersRes.json();
           setOrders(ordersData);
         } else {
-          try {
-            const errJson = await ordersRes.json();
-            console.error("Failed to load orders from API:", ordersRes.status, errJson);
-          } catch {
-            const errText = await ordersRes.text();
-            console.error("Failed to load orders from API:", ordersRes.status, errText.slice(0, 500));
-          }
+          await handleResError("orders", ordersRes);
         }
 
         // 2. Fetch Repairs
@@ -61,13 +69,7 @@ export function useAppState() {
           const repairsData = await repairsRes.json();
           setRepairs(repairsData);
         } else {
-          try {
-            const errJson = await repairsRes.json();
-            console.error("Failed to load repairs from API:", repairsRes.status, errJson);
-          } catch {
-            const errText = await repairsRes.text();
-            console.error("Failed to load repairs from API:", repairsRes.status, errText.slice(0, 500));
-          }
+          await handleResError("repairs", repairsRes);
         }
 
         // 3. Fetch Wardrobe Digital Closet
@@ -76,13 +78,7 @@ export function useAppState() {
           const wardrobeData = await wardrobeRes.json();
           setWardrobe(wardrobeData);
         } else {
-          try {
-            const errJson = await wardrobeRes.json();
-            console.error("Failed to load wardrobe from API:", wardrobeRes.status, errJson);
-          } catch {
-            const errText = await wardrobeRes.text();
-            console.error("Failed to load wardrobe from API:", wardrobeRes.status, errText.slice(0, 500));
-          }
+          await handleResError("wardrobe", wardrobeRes);
         }
 
         // 4. Fetch Master Biometrics Sizing
@@ -92,13 +88,7 @@ export function useAppState() {
           const measurementsData = await measurementsRes.json();
           setMeasurements(measurementsData);
         } else {
-          try {
-            const errJson = await measurementsRes.json();
-            console.error("Failed to load measurements from API:", measurementsRes.status, errJson);
-          } catch {
-            const errText = await measurementsRes.text();
-            console.error("Failed to load measurements from API:", measurementsRes.status, errText.slice(0, 500));
-          }
+          await handleResError("measurements", measurementsRes);
         }
       } catch (err) {
         console.warn("Could not sync user-specific records from database. Using memory fallback mode:", err);
