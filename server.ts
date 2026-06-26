@@ -40,6 +40,10 @@ const pool = new Pool({
   connectionTimeoutMillis: 5000,
 });
 
+pool.on("error", (err) => {
+  console.error("Unexpected error on idle pg client:", err);
+});
+
 let dbAvailable = false;
 let dbInitPromise: Promise<void> | null = null;
 
