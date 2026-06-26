@@ -26,6 +26,7 @@ export default function Navbar({
         { id: "shop", label: "Products Catalog" },
         { id: "custom-studio", label: "Bespoke Configurator" },
         { id: "gallery", label: "Bespoke Gallery" },
+        { id: "reviews", label: "Client Reviews" },
       ]
     : [
         { id: "shop", label: "Shop Boutique" },
@@ -33,6 +34,7 @@ export default function Navbar({
         { id: "custom-studio", label: "Custom Order" },
         { id: "repairs", label: "Repairs & Care" },
         { id: "gallery", label: "Bespoke Gallery" },
+        { id: "reviews", label: "Client Reviews" },
         { id: "wardrobe", label: "Customer Closet" },
       ];
 

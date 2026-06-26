@@ -1,4 +1,4 @@
-import { Product, Order, RepairRequest, WardrobeItem } from "./types";
+import { Product, Order, RepairRequest, WardrobeItem, Review } from "./types";
 
 export const FABRICS = [
   { id: "wool-120", name: "Super 120s Merino Wool", mill: "Loro Piana (Italy)", type: "Wool", desc: "Silky drape, perfect year-round weight with a subtle luster." },
@@ -337,3 +337,34 @@ export const INITIAL_WARDROBE: WardrobeItem[] = [
     dateAdded: "2026-06-16"
   }
 ];
+
+export const INITIAL_REVIEWS: Review[] = [
+  {
+    id: "rev-1",
+    customerName: "Julian Vance",
+    customerEmail: "julian.vance@example.com",
+    rating: 5,
+    comment: "The bespoke midnight navy suit fits absolutely perfectly. The attention to detail is outstanding!",
+    status: "approved",
+    date: "2026-06-20"
+  },
+  {
+    id: "rev-2",
+    customerName: "Alistair Thorne",
+    customerEmail: "alistair.t@example.com",
+    rating: 5,
+    comment: "Excellent repair service. My vintage tweed jacket was restored beautifully, you can't even tell where the tear was.",
+    status: "approved",
+    date: "2026-06-18"
+  },
+  {
+    id: "rev-3",
+    customerName: "Emilia Clarke",
+    customerEmail: "emilia@example.com",
+    rating: 4,
+    comment: "Fabulous custom trousers. Took a little longer than expected, but the quality of the wool and stitching is incredible.",
+    status: "approved",
+    date: "2026-06-15"
+  }
+];
+

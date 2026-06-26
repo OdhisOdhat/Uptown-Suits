@@ -11,6 +11,7 @@ import TailorDashboardView from "./components/TailorDashboardView";
 import OrderTrackerView from "./components/OrderTrackerView";
 import AuthView from "./components/AuthView";
 import GalleryView from "./components/GalleryView";
+import ReviewsView from "./components/ReviewsView";
 import Footer from "./components/Footer";
 
 import { useAppState } from "./hooks/useAppState";
@@ -104,6 +105,10 @@ export default function App() {
 
           {activeView === "gallery" && (
             <GalleryView user={user} />
+          )}
+
+          {activeView === "reviews" && (
+            <ReviewsView user={user} />
           )}
 
           {activeView === "wardrobe" && (

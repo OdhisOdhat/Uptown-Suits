@@ -333,6 +333,37 @@ let memMeasurements: Record<string, any> = {
   }
 };
 
+let memReviews = [
+  {
+    id: "rev-1",
+    customerName: "Julian Vance",
+    customerEmail: "julian.vance@example.com",
+    rating: 5,
+    comment: "The bespoke midnight navy suit fits absolutely perfectly. The attention to detail is outstanding!",
+    status: "approved",
+    date: "2026-06-20"
+  },
+  {
+    id: "rev-2",
+    customerName: "Alistair Thorne",
+    customerEmail: "alistair.t@example.com",
+    rating: 5,
+    comment: "Excellent repair service. My vintage tweed jacket was restored beautifully, you can't even tell where the tear was.",
+    status: "approved",
+    date: "2026-06-18"
+  },
+  {
+    id: "rev-3",
+    customerName: "Emilia Clarke",
+    customerEmail: "emilia@example.com",
+    rating: 4,
+    comment: "Fabulous custom trousers. Took a little longer than expected, but the quality of the wool and stitching is incredible.",
+    status: "approved",
+    date: "2026-06-15"
+  }
+];
+
+
 async function initDB() {
   if (!process.env.DATABASE_URL) return;
   try {
@@ -445,6 +476,20 @@ async function initDB() {
       );
     `);
 
+    // Create Reviews table
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS reviews (
+        id VARCHAR(50) PRIMARY KEY,
+        customer_name VARCHAR(100) NOT NULL,
+        customer_email VARCHAR(100) NOT NULL,
+        rating INT NOT NULL,
+        comment TEXT,
+        status VARCHAR(20) DEFAULT 'pending',
+        date VARCHAR(20),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
     // Seed products table if empty
     const prodCheck = await pool.query("SELECT COUNT(*) FROM products");
     if (parseInt(prodCheck.rows[0].count) === 0) {
@@ -467,6 +512,19 @@ async function initDB() {
           `INSERT INTO gallery (id, type, title, description, image, client_name)
            VALUES ($1, $2, $3, $4, $5, $6)`,
           [g.id, g.type, g.title, g.description, g.image, g.clientName || null]
+        );
+      }
+    }
+
+    // Seed reviews table if empty
+    const revCheck = await pool.query("SELECT COUNT(*) FROM reviews");
+    if (parseInt(revCheck.rows[0].count) === 0) {
+      console.log("Seeding reviews into Neon DB...");
+      for (const r of memReviews) {
+        await pool.query(
+          `INSERT INTO reviews (id, customer_name, customer_email, rating, comment, status, date)
+           VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+          [r.id, r.customerName, r.customerEmail, r.rating, r.comment, r.status, r.date]
         );
       }
     }
@@ -1563,6 +1621,88 @@ app.put("/api/measurements", async (req, res) => {
 
   memMeasurements[key] = { chest, waist, hips, neck, sleeveLength, inseam };
   res.json({ success: true });
+});
+
+
+// --- REVIEWS ENDPOINTS ---
+
+app.get("/api/reviews", async (req, res) => {
+  const { adminView } = req.query;
+
+  if (dbAvailable) {
+    try {
+      let query = "SELECT * FROM reviews ORDER BY created_at DESC";
+      let params: any[] = [];
+      if (adminView !== "true") {
+        query = "SELECT * FROM reviews WHERE status = 'approved' ORDER BY created_at DESC";
+      }
+      const reviewsRes = await pool.query(query, params);
+      const mapped = reviewsRes.rows.map((r) => ({
+        id: r.id,
+        customerName: r.customer_name,
+        customerEmail: r.customer_email,
+        rating: r.rating,
+        comment: r.comment,
+        status: r.status,
+        date: r.date,
+        createdAt: r.created_at
+      }));
+      return res.json(mapped);
+    } catch (err) {
+      console.warn("Get reviews SQL failed, using memory:", err);
+    }
+  }
+
+  if (adminView === "true") {
+    res.json(memReviews);
+  } else {
+    res.json(memReviews.filter((r) => r.status === "approved"));
+  }
+});
+
+app.post("/api/reviews", async (req, res) => {
+  const { customerName, customerEmail, rating, comment } = req.body;
+  const id = `rev-${Math.floor(1000 + Math.random() * 9000)}`;
+  const date = new Date().toISOString().split("T")[0];
+  const status = "pending";
+
+  if (dbAvailable) {
+    try {
+      await pool.query(
+        `INSERT INTO reviews (id, customer_name, customer_email, rating, comment, status, date)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+        [id, customerName, customerEmail, rating, comment, status, date]
+      );
+      return res.json({ success: true, review: { id, customerName, customerEmail, rating, comment, status, date } });
+    } catch (err) {
+      console.warn("Post review SQL failed, using memory:", err);
+    }
+  }
+
+  const newReview = { id, customerName, customerEmail, rating, comment, status, date };
+  memReviews.unshift(newReview);
+  res.json({ success: true, review: newReview });
+});
+
+app.put("/api/reviews/:id/status", async (req, res) => {
+  const { id } = req.params;
+  const { status } = req.body; // 'approved' | 'rejected'
+
+  if (dbAvailable) {
+    try {
+      await pool.query("UPDATE reviews SET status = $1 WHERE id = $2", [status, id]);
+      return res.json({ success: true });
+    } catch (err) {
+      console.warn("Update review SQL failed, using memory:", err);
+    }
+  }
+
+  const idx = memReviews.findIndex((r) => r.id === id);
+  if (idx !== -1) {
+    memReviews[idx].status = status;
+    return res.json({ success: true, review: memReviews[idx] });
+  }
+  res.status(404).json({ error: "Review not found" });
 });
 
 

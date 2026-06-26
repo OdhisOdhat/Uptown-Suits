@@ -107,3 +107,15 @@ export interface GalleryItem {
   createdAt?: string;
 }
 
+export interface Review {
+  id: string;
+  customerName: string;
+  customerEmail: string;
+  rating: number;
+  comment: string;
+  status: "pending" | "approved" | "rejected";
+  date: string;
+  createdAt?: string;
+}
+
+
